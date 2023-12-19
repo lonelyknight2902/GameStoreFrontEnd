@@ -1,5 +1,6 @@
-import React from "react";
+import { useState } from "react";
 import { Button, Carousel, ImageContainer, RatingCard } from "../components";
+import RatingStar from "../components/RatingStar";
 // import { Rating } from "@material-tailwind/react";
 
 const game = {
@@ -66,6 +67,7 @@ const ratings = [
 
 const Game = () => {
   const releaseDate = new Date(game.RELEASEDAY);
+  const [rating, setRating] = useState(0);
   return (
     <div className="text-white font-inter">
       <h1 className="font-normal text-6xl mb-10">{game.NAME}</h1>
@@ -137,8 +139,22 @@ const Game = () => {
             className="text-gray-400"
             dangerouslySetInnerHTML={{ __html: game.DESCRIPTION }}
           ></div>
-          <h2 className="text-white text-6xl font-normal">Player Rating</h2>
-          <div>
+          <h2 className="text-white text-4xl font-normal">Player Rating</h2>
+          <div className="flex flex-col gap-4">
+            <span>Share your review:</span>
+            <div className="w-full border bg-neutral-800 rounded-md border-neutral-500 focus-within:border-neutral-400">
+              <textarea
+                type="text"
+                placeholder="Your review..."
+                className="w-full h-32 px-4 py-2 outline-none bg-transparent placeholder:text-neutral-500"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Star rating:</span>
+              <RatingStar rating={rating} setRating={setRating}/>
+              <Button text="Share" isSecondary={false} className="ms-auto" />
+            </div>
+            <span>Other reviews:</span>
             {ratings.map((rating) => {
               return (
                 <RatingCard

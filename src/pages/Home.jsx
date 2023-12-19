@@ -44,7 +44,7 @@ const Home = () => {
 		}
 	])
   return (
-    <div>
+    <div className="h-screen">
       <h2 className="font-bold text-white text-3xl">Featured Games</h2>
       <FeatureContainer featureGames={games} />
     </div>

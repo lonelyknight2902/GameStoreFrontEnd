@@ -1,5 +1,6 @@
 import GameCarousel from "./GameCarousel";
 import FeatureCard from "./FeatureCard";
+import FeatureGameInfo from "./FeatureGameInfo";
 import { useEffect, useState } from "react";
 
 const FeatureContainer = ({ featureGames }) => {
@@ -19,15 +20,16 @@ const FeatureContainer = ({ featureGames }) => {
   };
 
   return (
-    <div className="flex h-96 gap-10">
+    <div className="flex h-2/3 gap-10 mt-4">
       <div className="w-3/4 flex-3">
-        <GameCarousel index={currentGameIdx} featureGames={featureGames} />
+        {/* <GameCarousel index={currentGameIdx} featureGames={featureGames} /> */}
+        <FeatureGameInfo index={currentGameIdx} featureGames={featureGames} />
       </div>
       <div className=" flex flex-1 flex-col gap-4">
         {featureGames.map((featureGame, featureGameIdx) => {
           return (
             <FeatureCard
-              onClick={(e) => handleOnClick(featureGameIdx)}
+              onClick={(_) => handleOnClick(featureGameIdx)}
               featureGame={featureGame}
               isActive={featureGameIdx == currentGameIdx ? true : false}
             />

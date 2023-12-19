@@ -8,7 +8,7 @@ const Layout = ({children}) => {
   return (
     <>
       {!location.pathname.includes("/login") && <NavBar />}
-      <main className="mx-72  mt-20 flex self-center">
+      <main className="relative mx-64 mt-20 flex self-center overflow-auto z-0">
         {children}
       </main>
     </>
