@@ -1,8 +1,8 @@
 import React from "react";
 import { Button, CartItem } from "../components";
-import useSWR, {mutate} from "swr";
+import useSWR from "swr";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const games = [
   {
@@ -25,41 +25,50 @@ const games = [
   },
 ];
 
-const Cart = () => {
-  const endpoint = `http://localhost:3000/api/v1/user/cart`;
+const Checkout = () => {
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const fetcher = (url) => axios.get(url).then((res) => res.data.data);
-  mutate();
-  const { data, error, isLoading } = useSWR(endpoint, fetcher);
-  if (error) return <div>An error has occured</div>;
-  if (isLoading) return <div>Loading...</div>;
-  console.log(data);
+  // const fetcher = (url) => axios.get(url).then((res) => res.data.data);
+  // const { data, error, isLoading, mutate } = useSWR(endpoint, fetcher);
+  // if (error) return <div>An error has occured</div>;
+  // if (isLoading) return <div>Loading...</div>;
+  // console.log(data);
+  let data = state.games;
 
-  const handleRemove = async (gameId, index) => {
-    await axios.delete(`http://localhost:3000/api/v1/user/cart`, {
-      data: {
-        gameId: gameId
-      }
-    });
-    mutate(data.splice(index, 1));
-  }
+  // const handleRemove = async (gameId, index) => {
+  //   await axios.delete(`http://localhost:3000/api/v1/user/cart`, {
+  //     data: {
+  //       gameId: gameId
+  //     }
+  //   });
+  //   mutate(data.splice(index, 1));
+  // }
 
-  const handleCheckout = (e) => {
-    navigate('/checkout', {
-      state: {
-        games: data
-      }
-    })
-  }
+  const handlePlaceOrder = async (e) => {
+    try {
+      await axios.post(`http://localhost:3000/api/v1/user/checkout`, {
+        gameIds: data.map((game) => game.GAMEID),
+      });
+      navigate('/');
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="text-white font-inter flex flex-col gap-5 w-full">
-      <h1 className="text-6xl">My Cart</h1>
+      <h1 className="text-6xl">Checkout</h1>
       <div className="flex justify-between gap-5 w-full">
         <div className="w-3/4 flex flex-col gap-5">
-          {data.length > 0 ? data.map((game, index) => {
-            return <CartItem key={index} game={game} onRemove={(e) => handleRemove(game.GAMEID, index)}/>;
-          }) : <div className="w-full h-92 flex items-center justify-center">Your cart is empty</div>}
+          {data.length > 0 ? (
+            data.map((game, index) => {
+              return <CartItem key={index} game={game} />;
+            })
+          ) : (
+            <div className="w-full h-92 flex items-center justify-center">
+              Your order is empty
+            </div>
+          )}
         </div>
         <div className="w-1/4 flex flex-col gap-5">
           <h2 className="text-4xl font-light">Games Summary</h2>
@@ -103,11 +112,16 @@ const Cart = () => {
                 .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
             </div>
           </div>
-          <Button text="CHECK OUT" onClick={handleCheckout}/>
+          <Button text="PLACE" onClick={handlePlaceOrder}/>
+          <Button
+            text="CANCEL ORDER"
+            isSecondary={true}
+            onClick={(e) => navigate("/")}
+          />
         </div>
       </div>
     </div>
   );
 };
 
-export default Cart;
+export default Checkout;

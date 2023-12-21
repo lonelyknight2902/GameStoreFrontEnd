@@ -1,5 +1,7 @@
+import axios from "axios"
 import { FeatureContainer } from "../components"
 import {useState} from "react"
+import useSWR from "swr"
 
 const Home = () => {
   const [games, setGames] = useState([
@@ -43,10 +45,18 @@ const Home = () => {
 			"DEVELOPERID": 3
 		}
 	])
+
+	const fetcher = url => axios.get(url).then(res => res.data);
+
+	const {data, error} = useSWR("http://localhost:3000/api/v1/games/feature", fetcher);
+	if(error) return (<div>Request Failed</div>)
+	if(!data) return (<div>Loading...</div>)
+	console.log(data.data);
+
   return (
     <div className="h-screen">
       <h2 className="font-bold text-white text-3xl">Featured Games</h2>
-      <FeatureContainer featureGames={games} />
+      <FeatureContainer featureGames={data.data} />
     </div>
   )
 }

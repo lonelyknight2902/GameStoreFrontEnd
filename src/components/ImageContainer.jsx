@@ -22,7 +22,7 @@ const ImageContainer = ({ images }) => {
       <div className="w-full h-fit">
         <ImageCarousel index={currentImageIdx} images={images} />
       </div>
-      <div className="w-full flex h-50 gap-5 justify-start">
+      <div className="w-full grid grid-cols-4 h-50 gap-5 justify-start">
         {images.map((image, imageIdx) => {
           return (
             <ImageCard

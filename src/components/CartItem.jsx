@@ -1,14 +1,18 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const CartItem = ({ game }) => {
+const CartItem = ({ game, onRemove = null }) => {
+
+  const navigate = useNavigate();
+
   const releaseDate = new Date(game.ENDDATE)
   return (
-    <div className="flex justify-between p-6 bg-zinc-900 rounded-lg">
+    <div className="flex justify-between p-6 bg-zinc-900 rounded-lg h-64">
       <div className="flex gap-5">
-        <img className="w-1/4" src={game.COVERIMAGEURL} alt="" />
+        <img className="w-32 h-full object-cover" src={game.COVERIMAGEURL} alt="" />
         <div className="w-3/4 flex flex-col gap-2">
           <div className="py-[0.1rem] px-[0.6rem] bg-zinc-800 w-fit text-xs rounded-sm font-semibold">BASE GAME</div>
-          <h3 className="cursor-pointer hover:underline text-2xl">{game.NAME}</h3>
+          <h3 className="cursor-pointer hover:underline text-2xl" onClick={(e) => navigate(`/game/${game.GAMEID}`)}>{game.NAME}</h3>
         </div>
       </div>
       <div className="flex flex-col justify-between items-end">
@@ -49,7 +53,7 @@ const CartItem = ({ game }) => {
           )}
         </div>
         <div>
-          <span className="underline cursor-pointer">Remove</span>
+          <span onClick={onRemove} className="underline cursor-pointer">Remove</span>
         </div>
       </div>
     </div>

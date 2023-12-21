@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Button, Carousel, ImageContainer, RatingCard } from "../components";
 import RatingStar from "../components/RatingStar";
+import axios from "axios";
+import useSWR, { mutate } from "swr";
+import { useNavigate, useParams } from "react-router-dom";
+import RatingList from "../components/RatingList";
+import { useAuth } from "../hooks";
 // import { Rating } from "@material-tailwind/react";
 
 const game = {
@@ -52,7 +57,6 @@ const game = {
     "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-g1a-06-1920x1080-3117083b6aa9.jpg",
     "https://cdn2.unrealengine.com/the-first-gameplay-preview-of-alan-wake-2-1920x1080-6cd1f0e9b2df.jpg",
   ],
-  rating: 4.8,
 };
 
 const ratings = [
@@ -66,82 +70,111 @@ const ratings = [
 ];
 
 const Game = () => {
-  const releaseDate = new Date(game.RELEASEDAY);
   const [rating, setRating] = useState(0);
+  const { user } = useAuth();
+  // const [own, setOwn] = useState(false);
+  // const [cart, setCart] = useState(false);
+
+  async function gameFetcher(url) {
+    const res = await axios.get(url);
+    return res.data;
+  }
+  let { id } = useParams();
+  const navigate = useNavigate();
+  const getGameEndpoint = `http://localhost:3000/api/v1/games/${id}`;
+
+  mutate();
+  const gameStatus = useSWR(getGameEndpoint, gameFetcher, {
+    // revalidateOnMount : true,
+    // refreshWhenHidden: true,
+    refreshInterval: 1000,
+    // revalidateIfStale: true,
+    // revalidateOnFocus: true,
+  });
+  if (gameStatus.error) return <div>Request Failed</div>;
+  if (!gameStatus.data) return <div>Loading...</div>;
+  // if (gameStatus.data) {
+  //   setOwn(gameStatus.data.own);
+  //   setCart(gameStatus.data.cart);
+  // }
+  const handleAddToCart = async (e) => {
+    console.log("add to cart");
+    if (!user) navigate("/login");
+    try {
+      await axios.post(`http://localhost:3000/api/v1/user/cart`, {
+        gameId: id,
+      });
+      gameStatus.mutate({ ...gameStatus.data, cart: true });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleRefundGame = async (e) => {
+    console.log("refund game");
+    if(!user) navigate("/login");
+    try {
+      await axios.post(`http://localhost:3000/api/v1/user/refund`, {
+        gameId: id,
+      });
+      gameStatus.mutate({ ...gameStatus.data, own: false });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleBuyNow = (e) => {
+    if(!user) navigate("/login");
+    navigate('/checkout', {
+      state: {
+        games: gameStatus.data.data
+      }
+    })
+  }
+
+  console.log(gameStatus.data);
+
+  const saleEndDate = new Date(gameStatus.data.data[0].ENDDATE);
+  const releaseDate = new Date(gameStatus.data.data[0].RELEASEDAY);
+
+  // gameStatus.mutate();
+
   return (
     <div className="text-white font-inter">
-      <h1 className="font-normal text-6xl mb-10">{game.NAME}</h1>
-      <div>
-        <div class="flex justify-end gap-4">
-          <div class="flex">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-white w-5 h-auto fill-current"
-              viewBox="0 0 16 16"
-            >
-              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-            </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-white w-5 h-auto fill-current"
-              viewBox="0 0 16 16"
-            >
-              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-            </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-white w-5 h-auto fill-current"
-              viewBox="0 0 16 16"
-            >
-              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-            </svg>
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-white w-5 h-auto fill-current"
-              viewBox="0 0 16 16"
-            >
-              <path d="M5.354 5.119 7.538.792A.516.516 0 0 1 8 .5c.183 0 .366.097.465.292l2.184 4.327 4.898.696A.537.537 0 0 1 16 6.32a.548.548 0 0 1-.17.445l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256a.52.52 0 0 1-.146.05c-.342.06-.668-.254-.6-.642l.83-4.73L.173 6.765a.55.55 0 0 1-.172-.403.58.58 0 0 1 .085-.302.513.513 0 0 1 .37-.245l4.898-.696zM8 12.027a.5.5 0 0 1 .232.056l3.686 1.894-.694-3.957a.565.565 0 0 1 .162-.505l2.907-2.77-4.052-.576a.525.525 0 0 1-.393-.288L8.001 2.223 8 2.226v9.8z" />
-            </svg>
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-white w-5 h-auto fill-current"
-              viewBox="0 0 16 16"
-            >
-              <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
-            </svg>
-          </div>
-
-          <span class="text-slate-400 font-medium">3.7 out of 5 stars</span>
-        </div>
+      <h1 className="font-normal text-6xl mb-10">
+        {gameStatus.data.data[0].NAME}
+      </h1>
+      <div className="mb-10">
+        <RatingStar rating={gameStatus.data.data[0].AVGRATING} isFixed={true}/>
       </div>
       <div className="flex gap-24 h-fit">
         <div className="w-4/6 flex flex-col gap-10">
-          <ImageContainer images={game.images} />
+          <ImageContainer images={gameStatus.data.data[0].images} />
           <div>
-            <p className="text-xl">{game.SUMMARY}</p>
+            <p className="text-xl">{gameStatus.data.data[0].SUMMARY}</p>
           </div>
           <div className="px-4 border-l-2 border-l-gray-500">
             <h2 className="text-gray-500">Genres</h2>
             <div>
-              {game.tags.map((genre, index) => (
-                <>
+              {gameStatus.data.data[0].tags.map((genre, index) => (
+                <span key={genre.TAGID}>
                   {index ? ", " : ""}
                   <span className="underline cursor-pointer">
                     {genre.TAGNAME}
                   </span>
-                </>
+                </span>
               ))}
             </div>
           </div>
           <div
             className="text-gray-400"
-            dangerouslySetInnerHTML={{ __html: game.DESCRIPTION }}
+            dangerouslySetInnerHTML={{
+              __html: gameStatus.data.data[0].DESCRIPTION,
+            }}
           ></div>
           <h2 className="text-white text-4xl font-normal">Player Rating</h2>
           <div className="flex flex-col gap-4">
-            <span>Share your review:</span>
+            {/* <span>Share your review:</span>
             <div className="w-full border bg-neutral-800 rounded-md border-neutral-500 focus-within:border-neutral-400">
               <textarea
                 type="text"
@@ -151,33 +184,24 @@ const Game = () => {
             </div>
             <div className="flex items-center gap-2">
               <span>Star rating:</span>
-              <RatingStar rating={rating} setRating={setRating}/>
+              <RatingStar rating={rating} setRating={setRating} />
               <Button text="Share" isSecondary={false} className="ms-auto" />
             </div>
-            <span>Other reviews:</span>
-            {ratings.map((rating) => {
-              return (
-                <RatingCard
-                  username={rating.USERNAME}
-                  image={rating.IMAGEURL}
-                  comment={rating.Comment}
-                  rating={rating.RATING}
-                />
-              );
-            })}
+            <span>Other reviews:</span> */}
+            <RatingList id={id} />
           </div>
         </div>
         <div className=" flex flex-1 flex-col items-center gap-4">
           <div className="p-10 pt-0">
-            <img src={game.COVERIMAGEURL} alt="" />
+            <img src={gameStatus.data.data[0].COVERIMAGEURL} alt="" />
           </div>
           <div className="content-start w-fit self-start text-lg">
-            {game.AMOUNT == null ? (
+            {gameStatus.data.data[0].AMOUNT == null ? (
               <div>
                 <div>
                   <span>
                     đ
-                    {game.PRICE.toString().replace(
+                    {gameStatus.data.data[0].PRICE.toString().replace(
                       /\B(?=(\d{3})+(?!\d))/g,
                       ","
                     )}
@@ -188,44 +212,68 @@ const Game = () => {
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <div className="text-xs flex items-center  py-[0.01rem] px-[0.6rem] bg-blue-600 w-fit rounded-md">
-                    -{game.AMOUNT}%
+                    -{gameStatus.data.data[0].AMOUNT}%
                   </div>
                   <div>
                     <span className="line-through text-gray-500 mr-2">
                       đ
-                      {game.PRICE.toString().replace(
+                      {gameStatus.data.data[0].PRICE.toString().replace(
                         /\B(?=(\d{3})+(?!\d))/g,
                         ","
                       )}
                     </span>
                     <span>
                       đ
-                      {((game.PRICE * game.AMOUNT) / 100)
+                      {(
+                        (gameStatus.data.data[0].PRICE *
+                          gameStatus.data.data[0].AMOUNT) /
+                        100
+                      )
                         .toString()
                         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                     </span>
                   </div>
                 </div>
                 <div className="text-sm">
-                  Sale ends {releaseDate.getDate()}/{releaseDate.getMonth() + 1}
-                  /{releaseDate.getFullYear()}
+                  Sale ends {saleEndDate.getDate()}/{saleEndDate.getMonth() + 1}
+                  /{saleEndDate.getFullYear()}
                 </div>
               </div>
             )}
           </div>
-          <Button text={"BUY NOW"} />
-          <Button text={"ADD TO CART"} isSecondary={true} />
+          {gameStatus.data.data[0].own ? (
+            <Button text={"IN LIBRARY"} onClick={(e) => navigate("/library")} />
+          ) : (
+            <Button text={"BUY NOW"} onClick={handleBuyNow}/>
+          )}
+          {gameStatus.data.data[0].cart ? (
+            <Button
+              text={"VIEW IN CART"}
+              onClick={(e) => navigate("/cart")}
+              isSecondary={true}
+            />
+          ) : (gameStatus.data.data[0].own ? <Button
+            text={"REFUND"}
+            onClick={handleRefundGame}
+            isSecondary={true}
+          />:
+            <Button
+              text={"ADD TO CART"}
+              onClick={handleAddToCart}
+              isSecondary={true}
+            />
+          )}
           <div className=" text-base flex flex-col w-full">
             <div className="py-2 flex w-full justify-between border-b-2 border-b-gray-800">
               <div className="text-gray-500">Developer</div>
               <div className="cursor-pointer hover:underline">
-                {game.DEVELOPERNAME}
+                {gameStatus.data.data[0].DEVELOPERNAME}
               </div>
             </div>
             <div className="py-2 flex w-full justify-between border-b-2 border-b-gray-800">
               <div className="text-gray-500">Publisher</div>
               <div className="cursor-pointer hover:underline">
-                {game.PUBLISHERNAME}
+                {gameStatus.data.data[0].PUBLISHERNAME}
               </div>
             </div>
             <div className="py-2 flex w-full justify-between">
